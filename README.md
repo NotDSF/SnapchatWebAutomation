@@ -4,12 +4,18 @@ Allows you to automate tasks on Snapchat Web
 - [Example](#example)
 
 ## How to authenticate
-Once initializing the program with `Snapchat.Login` we check if data exists or not, if data doesn't exist it goes into login mode which allows you to authenticate into your snapchat account using the browser, once authentication is complete the program will shutdown and the next time you run Snapchat.Login you won't have to authenticate
+Once calling the function `Snapchat.Login` we will boot up all the essentials for the client, if you aren't authenticated we will wait for you to log in to your snapchat account before continuing execution of the program. If authentication exists you should still call this function as it handles events etc
 > To remove your data delete the `user_data` folder
 
 ---
 
 ## API
+
+### Get Friend Data
+This contains the exact data returned from the snapchat API on friend information.
+```js
+Snapchat.friends <array>
+```
 
 ### Message Event
 Event fires every time a message is sent within the current channel.

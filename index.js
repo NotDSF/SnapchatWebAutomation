@@ -16,26 +16,6 @@ module.exports = new class Snapchat {
 
 	async Login() {
 		return new Promise(async (resolve) => {
-			if (!existsSync("user_data")) {
-				console.log("Initializing login proccess");
-
-				const gbrowser = await puppeteer.launch({ headless: false, userDataDir: "./user_data" });
-				const gpage = await gbrowser.newPage();
-				await gpage.goto("https://web.snapchat.com");
-				await gpage.waitForSelector("#root > div.Fpg8t > div.BL7do > nav > div:nth-child(1) > div > div > div:nth-child(1) > div > div.LNwMF", {
-					visible: true,
-					timeout: 600000
-				});
-
-				console.log("Please accept notifications if you haven't");
-				setTimeout(async () => {
-					console.log("Successfully logged into snapchat, closing browser, run again to use client");
-					await gbrowser.close();
-					process.exit(0);
-				}, 5000);
-				return;
-			}
-
 			const gbrowser = browser || await puppeteer.launch({ headless: false, userDataDir: "./user_data" });
 			const gpage = await gbrowser.newPage();
 
@@ -44,8 +24,14 @@ module.exports = new class Snapchat {
 
 			await page.exposeFunction("debug", (...a) => console.log(...a));
 			await page.exposeFunction("error", (...a) => console.error(...a));
-
 			await page.goto("https://web.snapchat.com");
+
+			const friends = await page.waitForResponse((response) => {
+				return response.url().match("friends");
+			}, { timeout: 0 });
+			this.friends = await friends.json();
+			this._loggedin = true;
+
 			await page.waitForSelector("#root > div.Fpg8t > div.BL7do > nav > div:nth-child(1) > div > div > div:nth-child(1) > div > div.LNwMF", {
 				visible: true
 			});
@@ -74,11 +60,19 @@ module.exports = new class Snapchat {
 	}
 
 	async CloseChat() {
+		if (!this._loggedin) {
+			throw "You need to initialize Snapchat using Snapchat.Login before using this function";
+		}
+
 		inchat = false;
 		return await page.evaluate(() => document.getElementsByClassName("enQRR eKaL7")[0].click());
 	}
 
 	async OpenChat(name) {
+		if (!this._loggedin) {
+			throw "You need to initialize Snapchat using Snapchat.Login before using this function";
+		}
+
 		return new Promise(async (resolve, reject) => {
 			await page.evaluate((name) => {
 				let Index = Array.from(document.getElementsByClassName("FiLwP")).findIndex(child => child.textContent === name);
@@ -101,6 +95,10 @@ module.exports = new class Snapchat {
 	}
 
 	async GetChats() {
+		if (!this._loggedin) {
+			throw "You need to initialize Snapchat using Snapchat.Login before using this function";
+		}
+
 		return await page.evaluate(() => {
 			let chats = [];
 			for (let chat of document.getElementsByClassName("FiLwP")) {
@@ -111,6 +109,10 @@ module.exports = new class Snapchat {
 	}
 
 	async GetMessages() {
+		if (!this._loggedin) {
+			throw "You need to initialize Snapchat using Snapchat.Login before using this function";
+		}
+
 		return await page.evaluate(() => {
 			let msgs = document.getElementsByClassName("T1yt2");
 			let data = [];
@@ -137,6 +139,10 @@ module.exports = new class Snapchat {
 	}
 
 	async SendMessage(content) {
+		if (!this._loggedin) {
+			throw "You need to initialize Snapchat using Snapchat.Login before using this function";
+		}
+		
 		return new Promise(async (resolve) => {
 			ncp.copy(content, async function () {
 				await page.keyboard.down('Control')
